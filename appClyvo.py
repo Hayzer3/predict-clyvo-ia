@@ -24,9 +24,13 @@ app = Flask(__name__)
 
 # Inicializa o Gemini (Corrigido para a versão correta da Google)
 try:
-    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest", temperature=0.1, api_key=google_api_key)
+
+    llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash", temperature=0.1, api_key=google_api_key)
+
 except Exception as e:
+
     print("Erro ao inicializar LLM:", e)
+
     llm = None
 
 # ==========================================
