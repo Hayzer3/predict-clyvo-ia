@@ -1,93 +1,90 @@
-# 🐾 CLYVO Predict - API de Inteligência Artificial
+# CLYVO Predict API
 
-O **CLYVO Predict** é uma plataforma SaaS de gestão veterinária preventiva. Este repositório contém o microsserviço de Inteligência Artificial desenvolvido em Python, responsável por calcular o **Score de Saúde** dos animais de estimação através de Machine Learning clássico e Visão Computacional (IA Generativa).
+## 🐾 Sobre o Projeto
 
-Projeto desenvolvido para o **FIAP Challenge 2026 (1º Sprint)**.
+O **CLYVO Predict API** é um microsserviço de Inteligência Artificial focado em medicina veterinária preventiva.
 
----
+A API processa dados de telemetria (IoT), histórico clínico e imagens para gerar um **Score de Saúde dinâmico**, alertando tutores e clínicas sobre riscos iminentes.
 
-# 👥 Equipa (Turma 2TDSPX)
-
-- Camily Vitoria Pereira Maciel (RM: 566520)
-- Eduarda Weiss Ventura (RM: 564434)
-- Lucas Nunes Soares (RM: 566503)
-- Maria Gabriela Landim Severo (RM: 565146)
-- Samara Porto Souza (RM: 559072)
+Projeto desenvolvido para o **FIAP Challenge 2026**.
 
 ---
 
-#  Arquitetura e Funcionalidades
+#  Arquitetura e Tecnologias
 
-A API foi construída utilizando o **Flask** e expõe dois endpoints principais para integração com o frontend (**React Native**) e o backend central (**Java Spring Boot**):
-
-## IA Tabular (Random Forest)
-
-Analisa dados históricos do Oracle DB:
-
-- Idade do animal
-- Vacinas atrasadas
-- Vermífugos
-- Dados telemétricos IoT
-- Variação de peso
-
-Com isso, a IA classifica automaticamente o nível de risco clínico.
+- Python 3
+- Flask (Framework REST API)
+- Scikit-Learn & Pandas (Machine Learning - Random Forest)
+- LangChain & Google Generative AI (Gemini 3.5 Flash)
+- OpenCV (Processamento e anotação de imagens)
 
 ---
 
-## Visão Computacional (Gemini + LangChain)
+#  Funcionalidades Principais
 
-Recebe o upload de uma fotografia do animal e utiliza IA Generativa para:
+##  IA Tabular
 
-- Identificar a raça
-- Detectar condição corporal
-- Reconhecer predisposições de risco
+Predição de risco clínico baseada em:
 
-Exemplos:
+- Dados históricos
+  - idade
+  - vacinas
+  - vermífugos
+  - variação de peso
+---
 
-- Sobrepeso
-- Braquicefalia
-- Magreza extrema
+## Visão Computacional
 
-A resposta devolve um JSON estruturado com os pontos de penalização.
+Análise de imagens de pets usando Gemini 3.5 Flash para:
+
+- Determinar condição corporal:
+  - Abaixo do peso
+  - Ideal
+  - Sobrepeso
+  - Obeso
+- Inferir raça estimada
 
 ---
 
-## 3 Evidência Visual (OpenCV)
+##  Engine de Regras de Negócio
 
-A API desenha automaticamente:
-
-- Bounding boxes
-- Textos de diagnóstico
-- Alertas clínicos
-
-Tudo diretamente na imagem original, gerando um artefato visual salvo no servidor.
+Aplicação automática de penalidades no score baseada no diagnóstico visual, sem depender exclusivamente dos cálculos do LLM.
 
 ---
 
-# 🛠️ Tecnologias Utilizadas
+##  Alertas de Comunicação
 
-- **Python 3.10+**
-- **Flask** (Framework Web / API REST)
-- **Scikit-Learn**
-- **Pandas**
-- **NumPy**
-- **LangChain**
-- **Google Generative AI**
-- **Gemini 3.5 Flash**
-- **OpenCV**
-- **Python-dotenv**
+Estruturação de respostas preparadas para:
+
+- WhatsApp
+- Sistemas de mensageria
+- Futuras integrações RAG (Retrieval-Augmented Generation)
 
 ---
 
-#  Como Instalar e Executar Localmente
+##  Evidência Visual Dinâmica
 
-## Clonar o Repositório
+O sistema:
+
+- Processa a imagem original
+- Sobrepõe o diagnóstico em tempo real usando OpenCV
+- Calcula dinamicamente a largura do quadro
+- Evita cortes no texto da evidência clínica
+
+---
+
+# Configuração e Execução do Ambiente
+
+## Clone o repositório
 
 ```bash
-git clone https://github.com/SeuUsuario/clyvo-predict-ia.git
-cd clyvo-predict-ia
+git clone <url-do-repositorio>
+cd clyvo-predict-api
+```
 
-## Criar e Ativar Ambiente Virtual (Opcional)
+---
+
+## Crie e ative um ambiente virtual
 
 ### Windows
 
@@ -105,7 +102,7 @@ source .venv/bin/activate
 
 ---
 
-## Instalar Dependências
+## Instale as dependências
 
 ```bash
 pip install flask pandas numpy scikit-learn langchain-google-genai langchain-core opencv-python python-dotenv
@@ -113,23 +110,23 @@ pip install flask pandas numpy scikit-learn langchain-google-genai langchain-cor
 
 ---
 
-##  Configurar Variáveis de Ambiente
+## Configure as variáveis de ambiente
 
-Crie um ficheiro `.env` na raiz do projeto:
+Crie um arquivo chamado `.env` na raiz do projeto:
 
 ```env
-GOOGLE_API_KEY="COLA_A_TUA_CHAVE_AQUI"
+GOOGLE_API_KEY=sua_chave_de_api_aqui
 ```
 
 ---
 
-## Iniciar o Servidor
+## Execute a aplicação
 
 ```bash
 python app.py
 ```
 
-A API ficará disponível em:
+Servidor iniciado em:
 
 ```txt
 http://localhost:5000
@@ -137,23 +134,23 @@ http://localhost:5000
 
 ---
 
-#  Documentação dos Endpoints
+# Documentação dos Endpoints
 
-## Histórico e IoT Tabular
+# Predição Tabular (Histórico + IoT)
 
-### Rota
+## Endpoint
 
 ```http
 POST /api/score/historico
 ```
 
-### Content-Type
+## Content-Type
 
 ```txt
 application/json
 ```
 
-### Exemplo de Request
+## Payload
 
 ```json
 {
@@ -165,90 +162,115 @@ application/json
 }
 ```
 
-### Resposta (200 OK)
+---
+
+## Resposta Esperada (200 OK)
 
 ```json
 {
-  "codigo_risco": 2,
+  "pet_risco_id": 2,
   "score_saude": 30,
-  "status_saude": "Crítico",
+  "status_saude": "Critico",
+  "cor_indicador": "Vermelho",
   "disparar_whatsapp": true
 }
 ```
 
 ---
 
-## Análise Visual (IA Generativa)
+# Predição Visual (IA Generativa)
 
-### Rota
+## Endpoint
 
 ```http
 POST /api/score/visual
 ```
 
-### Content-Type
+## Content-Type
 
 ```txt
 multipart/form-data
 ```
 
-### Exemplo de Request
+---
 
-| Key    | Tipo | Valor   |
-|--------|------|----------|
-| imagem | File | pug.jpg  |
+## Payload
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| imagem | File | Arquivo de imagem do pet (.jpg, .jpeg, .png) |
+
+### Limite máximo
+
+```txt
+5MB
+```
 
 ---
 
-### Resposta (200 OK)
+## Resposta Esperada (200 OK)
 
 ```json
 {
-  "especie": "Cão",
+  "especie": "Cao",
   "raca_estimada": "Pug",
   "condicao_corporal": "Sobrepeso",
-  "alerta_risco_visual": "Animal apresenta braquicefalia extrema associada a sobrepeso...",
-  "pontos_de_risco": 3
+  "alerta_whatsapp": "Ola! Notamos pelo nosso sistema visual que o pet encontra-se com sobrepeso. Recomendamos agendar uma avaliacao nutricional.",
+  "pontos_de_risco": 10
 }
 ```
 
-> O servidor também guardará automaticamente um ficheiro:
->
-> ```txt
-> output_analise_ia.jpg
-> ```
->
-> contendo o diagnóstico renderizado sobre a imagem original.
+---
+
+# Evidência Gerada
+
+Após o processamento bem-sucedido da rota visual, o sistema cria automaticamente o arquivo:
+
+```txt
+output_analise_ia.jpg
+```
+
+O arquivo contém:
+
+- Diagnóstico visual
+- Informações clínicas
+- Evidência anotada pela IA
 
 ---
 
-# 📂 Estrutura 
+#  Estrutura Esperada do Projeto
 
-```txt
-clyvo-predict-ia/
+```bash
+clyvo-predict-api/
 │
 ├── app.py
 ├── .env
 ├── requirements.txt
+├── output_analise_ia.jpg
+│
+├── models/
+├── routes/
+├── services/
+├── utils/
+│
 └── README.md
 ```
 
 ---
 
-# 🧠 Objetivo do Projeto
+#  Objetivo do Projeto
 
-O objetivo do **CLYVO Predict** é utilizar Inteligência Artificial para transformar a medicina veterinária preventiva através de:
+O objetivo do CLYVO Predict é transformar a medicina veterinária reativa em um modelo preventivo, utilizando:
 
-- Análise preditiva
-- Monitoramento inteligente
-- Telemetria IoT
+- Inteligência Artificial
+- IoT
 - Visão Computacional
-- Alertas automatizados
+- Automação de alertas clínicos
 
-Permitindo intervenções mais rápidas e melhor qualidade de vida para os animais.
+para aumentar a qualidade de vida dos pets e reduzir riscos clínicos antecipadamente.
 
 ---
 
-# 📜 Licença
+# Desenvolvido para
 
-Projeto académico desenvolvido para o **FIAP Challenge 2026**.
+**FIAP Challenge 2026** 
