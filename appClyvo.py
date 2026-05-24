@@ -18,26 +18,17 @@ load_dotenv(override=True)
 google_api_key = os.getenv("GOOGLE_API_KEY")
 
 if not google_api_key:
-    raise EnvironmentError("Chave GOOGLE_API_KEY não encontrada no arquivo .env!")
+    raise EnvironmentError("Chave GOOGLE_API_KEY nao encontrada no arquivo .env!")
 
 app = Flask(__name__)
 
-# Inicializa o Gemini (Corrigido para a versão correta da Google)
 try:
-
     llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash", temperature=0.1, api_key=google_api_key)
-
 except Exception as e:
-
     print("Erro ao inicializar LLM:", e)
-
     llm = None
 
-# ==========================================
-# TREINAMENTO DO MODELO RANDOM FOREST (TABULAR)
-# ==========================================
-
-print("⚙️ Treinando IA Tabular (Random Forest)...")
+print("Treinando IA Tabular...")
 np.random.seed(42)
 n_samples = 1000
 
@@ -68,11 +59,7 @@ y = df['nivel_risco']
 
 modelo_rf = RandomForestClassifier(n_estimators=100, random_state=42)
 modelo_rf.fit(X, y)
-print("✅ IA Tabular Pronta!")
- 
-# ==========================================
-# ROTA 1: PREVISÃO VIA DADOS (Para o App/Java)
-# ==========================================
+print("IA Tabular Pronta!")
 
 @app.route('/prever_risco', methods=['POST'])
 @app.route('/api/score/historico', methods=['POST'])
@@ -90,9 +77,9 @@ def score_historico():
         predicao = modelo_rf.predict(df_input)[0]
         
         mapa_score = {
-            0: {"status": "Saudável", "score": 95, "cor": "Verde", "alerta": False},
-            1: {"status": "Atenção", "score": 65, "cor": "Amarelo", "alerta": True},
-            2: {"status": "Crítico", "score": 30, "cor": "Vermelho", "alerta": True}
+            0: {"status": "Saudavel", "score": 95, "cor": "Verde", "alerta": False},
+            1: {"status": "Atencao", "score": 65, "cor": "Amarelo", "alerta": True},
+            2: {"status": "Critico", "score": 30, "cor": "Vermelho", "alerta": True}
         }
         res = mapa_score[predicao]
             
@@ -106,24 +93,19 @@ def score_historico():
     except Exception as e:
         return jsonify({"erro": str(e)}), 400
 
-# ==========================================
-# ROTA 2: PREVISÃO VISUAL VIA GEMINI (Upload de Foto)
-# ==========================================
-
 @app.route('/api/score/visual', methods=['POST'])
 def score_visual():
     if 'imagem' not in request.files:
-        return jsonify({"erro": "Nenhuma imagem enviada na requisição."}), 400
+        return jsonify({"erro": "Nenhuma imagem enviada."}), 400
 
     arquivo = request.files['imagem']
 
     if not arquivo.mimetype or not arquivo.mimetype.startswith('image/'):
-        return jsonify({"erro": "Arquivo enviado não é uma imagem."}), 400
+        return jsonify({"erro": "Arquivo enviado nao e uma imagem."}), 400
 
-    print("📸 Imagem recebida pelo React Native. Analisando...")
+    print("Imagem recebida. Analisando...")
 
     tmp_file = None
-    caminho_output = None
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp:
             arquivo.save(tmp.name)
@@ -141,20 +123,19 @@ def score_visual():
         image_data_uri = f"data:{mime_type};base64,{base64.b64encode(imagem_bytes).decode('ascii')}"
 
         prompt_veterinario = """
-        Você é um sistema especialista em triagem veterinária. 
-        Analise a foto deste pet e retorne ESTRITAMENTE um JSON válido com a seguinte estrutura:
+        Voce e um sistema especialista em triagem veterinaria. 
+        Analise a foto deste pet e retorne ESTRITAMENTE um JSON valido com a seguinte estrutura:
         {
-            "especie": "Cão ou Gato",
-            "raca_estimada": "Nome da raça",
-            "condicao_corporal": "Abaixo do peso / Ideal / Sobrepeso",
-            "alerta_risco_visual": "Texto curto com possíveis riscos",
-            "pontos_de_risco": um número inteiro de 0 a 3
+            "especie": "Cao ou Gato",
+            "raca_estimada": "Nome da raca",
+            "condicao_corporal": "Abaixo do peso / Ideal / Sobrepeso / Obeso",
+            "alerta_risco_visual": "Texto curto com possiveis riscos"
         }
-        Não escreva nenhuma palavra fora do formato JSON.
+        Nao escreva nenhuma palavra fora do formato JSON.
         """
 
         if llm is None:
-            return jsonify({"erro": "LLM não inicializado."}), 500
+            return jsonify({"erro": "LLM nao inicializado."}), 500
 
         mensagem = HumanMessage(
             content=[
@@ -163,47 +144,79 @@ def score_visual():
             ]
         )
 
-        try:
-            resposta = llm.invoke([mensagem])
-        except ClientError as ce:
-            return jsonify({"erro": "Erro do provedor de IA", "detalhes": str(ce)}), 502
-
+        resposta = llm.invoke([mensagem])
         raw_content = resposta.content
-        
-        if isinstance(raw_content, list):
-            s = " ".join(str(item) for item in raw_content)
-        elif isinstance(raw_content, dict):
-            s = str(raw_content.get("text", raw_content))
-        else:
-            s = str(raw_content)
+        texto_json = str(raw_content).replace("```json", "").replace("```", "").strip()
 
-        s = s.replace("```json", "").replace("```", "").strip()
-        
-        m = re.search(r'\{\s*"', s)
-        if m:
-            start = m.start()
-            end = s.rfind('}')
-            texto_json = s[start:end+1] if end != -1 and end > start else s[start:]
-        else:
-            texto_json = s
+        start = texto_json.find('{')
+        end = texto_json.rfind('}')
+        if start != -1 and end != -1:
+            texto_json = texto_json[start:end+1]
 
+        diagnostico = {}
+        
         try:
-            diagnostico = json.loads(texto_json)
-        except Exception:
-            try:
-                diagnostico = ast.literal_eval(texto_json)
-            except Exception as exc:
-                raise ValueError(f"Não foi possível parsear JSON retornado pela IA: {exc}")
+            parsed_data = ast.literal_eval(texto_json) if "'" in texto_json else json.loads(texto_json)
+            
+            if isinstance(parsed_data, dict) and "text" in parsed_data:
+                inner_text = str(parsed_data["text"]).replace("```json", "").replace("```", "").strip()
+                start_in = inner_text.find('{')
+                end_in = inner_text.rfind('}')
+                if start_in != -1 and end_in != -1:
+                    diagnostico = json.loads(inner_text[start_in:end_in+1])
+                else:
+                    diagnostico = json.loads(inner_text)
+            else:
+                diagnostico = parsed_data
+
+        except Exception as e:
+            raise ValueError(f"Falha ao extrair JSON: {str(e)}")
+
+        condicao = diagnostico.get('condicao_corporal', 'Ideal')
+        
+        tabela_penalidade = {
+            "Obeso": 20,
+            "Sobrepeso": 10,
+            "Abaixo do peso": 15,
+            "Ideal": 0
+        }
+        
+        pontos_penalidade = tabela_penalidade.get(condicao, 0)
+        diagnostico['pontos_de_risco'] = pontos_penalidade
 
         img = cv2.imread(tmp_file)
         if img is not None:
-            texto_tela = f"Raca: {diagnostico.get('raca_estimada')} | Condicao: {diagnostico.get('condicao_corporal')}"
-            risco_tela = f"Score Penalizado: +{diagnostico.get('pontos_de_risco')} pt(s)"
+            raca = diagnostico.get('raca_estimada', 'Desconhecida')
+            
+            texto_tela = f"Raca: {raca} | Condicao: {condicao}"
+            risco_tela = f"Score Penalizado Visivelmente: -{pontos_penalidade} pt(s)"
+            
             h, w = img.shape[:2]
-            rect_w = min(800, w - 20)
-            cv2.rectangle(img, (10, 10), (10 + rect_w, 120), (0, 0, 0), -1)
-            cv2.putText(img, texto_tela, (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (17, 202, 160), 2)
-            cv2.putText(img, risco_tela, (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 50, 50), 2)
+
+            # Configuracao do texto para calculo de tamanho
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 1
+            thickness = 2
+
+            # Calcula largura do texto para ajustar o retangulo
+            (t1_w, t1_h), _ = cv2.getTextSize(texto_tela, font, font_scale, thickness)
+            (t2_w, t2_h), _ = cv2.getTextSize(risco_tela, font, font_scale, thickness)
+            
+            # Margem interna e largura total dinamica
+            padding_w = 20
+            max_text_width = max(t1_w, t2_w)
+            final_rect_width = max_text_width + (padding_w * 2)
+
+            # Garante que o retangulo nao estoure a largura da imagem
+            rect_right = min(10 + final_rect_width, w - 10)
+
+            # Desenha o retangulo preto dinamico
+            cv2.rectangle(img, (10, 10), (rect_right, 120), (0, 0, 0), -1)
+
+            # Desenha os textos
+            cv2.putText(img, texto_tela, (20, 50), font, font_scale, (17, 202, 160), thickness)
+            cv2.putText(img, risco_tela, (20, 100), font, font_scale, (255, 50, 50), thickness)
+            
             caminho_output = "output_analise_ia.jpg"
             cv2.imwrite(caminho_output, img)
 
@@ -219,8 +232,5 @@ def score_visual():
             pass
 
 if __name__ == '__main__':
-    print("\n🚀 API CLYVO PREDICT ONLINE (Porta 5000)")
-    print("Rotas disponíveis:")
-    print(" -> POST /api/score/historico (JSON)")
-    print(" -> POST /api/score/visual (Form-Data com arquivo 'imagem')")
+    print("API CLYVO PREDICT ONLINE (Porta 5000)")
     app.run(host='0.0.0.0', port=5000, debug=True)
