@@ -1,0 +1,126 @@
+{
+  "info": {
+    "name": "Clyvo AI — Demonstração v2",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/v2/health"
+      }
+    },
+    {
+      "name": "2. Histórico — cenário estável",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v2/score/historico",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"idade_anos\": 3,\n  \"raca_predisposicao\": 0,\n  \"dias_ultima_vacina\": 100,\n  \"dias_ultimo_vermifugo\": 30,\n  \"variacao_peso_iot\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "3. Histórico — indicadores de atenção",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v2/score/historico",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"idade_anos\": 12,\n  \"raca_predisposicao\": 1,\n  \"dias_ultima_vacina\": 400,\n  \"dias_ultimo_vermifugo\": 120,\n  \"variacao_peso_iot\": -1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "4. Análise visual",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{base_url}}/api/v2/score/visual",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "imagem",
+              "type": "file",
+              "src": []
+            }
+          ]
+        },
+        "description": "Selecione uma foto JPEG/PNG local de até 5 MB no campo imagem."
+      }
+    },
+    {
+      "name": "5. Cadastro por foto",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{base_url}}/api/v2/pets/analyze-registration-photo",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "imagem",
+              "type": "file",
+              "src": []
+            }
+          ]
+        },
+        "description": "Selecione uma foto JPEG/PNG local de até 5 MB no campo imagem."
+      }
+    },
+    {
+      "name": "6. Consolidado — análise visual simulada",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v2/score/consolidado",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pet\": {\n    \"id\": 1,\n    \"nome\": \"Mel\"\n  },\n  \"historico\": {\n    \"idade_anos\": 12,\n    \"raca_predisposicao\": 1,\n    \"dias_ultima_vacina\": 400,\n    \"dias_ultimo_vermifugo\": 120,\n    \"variacao_peso_iot\": -1\n  },\n  \"analise_visual\": {\n    \"condicao_corporal\": \"Sobrepeso\",\n    \"pontos_risco_visual\": 8\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
