@@ -1,0 +1,7 @@
+Flask
+python-dotenv
+pandas
+numpy
+scikit-learn
+langchain-google-genai
+langchain-core

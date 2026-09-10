@@ -1,156 +1,100 @@
-# CLYVO Predict API
+# Clyvo AI — acompanhamento preventivo de pets
 
-## 🐾 Sobre o Projeto
+Protótipo acadêmico desenvolvido para o FIAP Challenge 2026. A API combina histórico informado, um modelo tabular e análise de fotografias para apoiar o acompanhamento de cães e gatos.
 
-O **CLYVO Predict API** é um microsserviço de Inteligência Artificial focado em medicina veterinária preventiva.
+Repositório: https://github.com/Hayzer3/predict-clyvo-ia
 
-A API processa dados de telemetria (IoT), histórico clínico e imagens para gerar um **Score de Saúde dinâmico**, alertando tutores e clínicas sobre riscos iminentes.
+## Integrantes
 
-Projeto desenvolvido para o **FIAP Challenge 2026**.
+| Integrante | RM |
+|---|---|
+| Camily Vitoria Pereira Maciel | RM566520 |
+| Eduarda Weiss Ventura | RM564434 |
+| Lucas Nunes Soares | RM566503 |
+| Maria Gabriela Landim Severo | RM565146 |
+| Samara Porto Souza | RM559072 |
 
----
+## Ideia central
 
-#  Arquitetura e Tecnologias
+Reunir indicadores do pet em um score de acompanhamento e destacar fatores que merecem atenção. A fotografia também auxilia o cadastro, sugerindo espécie, raça, cor, porte e uma faixa de peso que o tutor precisa confirmar.
 
-- Python 3
-- Flask (Framework REST API)
-- Scikit-Learn & Pandas (Machine Learning - Random Forest)
-- LangChain & Google Generative AI (Gemini 3.5 Flash)
-- OpenCV (Processamento e anotação de imagens)
+O projeto está em fase de protótipo. O modelo usa dados sintéticos e regras acadêmicas; os resultados não representam diagnóstico ou probabilidades clínicas validadas.
 
----
+## Recursos implementados
 
-#  Funcionalidades Principais
+- Health check da API.
+- Predição tabular com score base, classe, probabilidades do modelo e fatores de risco.
+- Análise visual de condição corporal com penalidade definida por regras.
+- Sugestão de dados para cadastro a partir de uma foto.
+- Score consolidado com histórico e análise visual opcional.
+- Resposta estruturada de alerta, com prioridade e mensagem sugerida.
 
-##  IA Tabular
+O campo de variação de peso é recebido por JSON: não existe conexão com um sensor físico neste repositório. A API prepara uma mensagem de alerta, mas não envia WhatsApp. Não há geração de imagem anotada, interface web ou persistência de dados nesta versão.
 
-Predição de risco clínico baseada em:
+## Tecnologias e arquitetura
 
-- Dados históricos
-  - idade
-  - vacinas
-  - vermífugos
-  - variação de peso
----
+| Tecnologia | Uso |
+|---|---|
+| Python e Flask | API HTTP |
+| NumPy e pandas | Construção e manipulação dos dados sintéticos |
+| scikit-learn | RandomForestClassifier |
+| LangChain e integração Google GenAI | Chamadas ao Gemini para análise de fotos e recomendações |
+| python-dotenv | Configuração local por variáveis de ambiente |
 
-## Visão Computacional
+Fluxo: cliente/Postman → Flask → modelo tabular e/ou Gemini → regras de score → JSON.
+O backend Java pode consumir este serviço na porta 5000; a API de IA pode ser demonstrada diretamente pelo Postman.
 
-Análise de imagens de pets usando Gemini 3.5 Flash para:
+## Execução local
 
-- Determinar condição corporal:
-  - Abaixo do peso
-  - Ideal
-  - Sobrepeso
-  - Obeso
-- Inferir raça estimada
-
----
-
-##  Engine de Regras de Negócio
-
-Aplicação automática de penalidades no score baseada no diagnóstico visual, sem depender exclusivamente dos cálculos do LLM.
-
----
-
-##  Alertas de Comunicação
-
-Estruturação de respostas preparadas para:
-
-- WhatsApp
-- Sistemas de mensageria
-- Futuras integrações RAG (Retrieval-Augmented Generation)
-
----
-
-##  Evidência Visual Dinâmica
-
-O sistema:
-
-- Processa a imagem original
-- Sobrepõe o diagnóstico em tempo real usando OpenCV
-- Calcula dinamicamente a largura do quadro
-- Evita cortes no texto da evidência clínica
-
----
-
-# Configuração e Execução do Ambiente
-
-## Clone o repositório
+1. Clone o repositório:
 
 ```bash
-git clone <url-do-repositorio>
-cd clyvo-predict-api
+git clone https://github.com/Hayzer3/predict-clyvo-ia.git
+cd predict-clyvo-ia
+python -m venv .venv
 ```
 
----
+2. Ative o ambiente:
 
-## Crie e ative um ambiente virtual
-
-### Windows
-
-```bash
-python -m venv .venv
-.venv\Scripts\activate
+Windows (PowerShell):
+```powershell
+.\.venv\Scripts\Activate.ps1
 ```
 
-### Linux / Mac
-
+Linux/macOS:
 ```bash
-python -m venv .venv
 source .venv/bin/activate
 ```
 
----
-
-## Instale as dependências
+3. Instale as dependências e configure o ambiente:
 
 ```bash
-pip install flask pandas numpy scikit-learn langchain-google-genai langchain-core opencv-python python-dotenv
+python -m pip install -r requirements.txt
 ```
 
----
+Copie `.env.example` para `.env` e preencha `GOOGLE_API_KEY`. Ajuste `GEMINI_MODEL` para um modelo disponível na sua conta; o exemplo acompanha a configuração atual do projeto. Não publique o arquivo `.env`.
 
-## Configure as variáveis de ambiente
-
-Crie um arquivo chamado `.env` na raiz do projeto:
-
-```env
-GOOGLE_API_KEY=sua_chave_de_api_aqui
-```
-
----
-
-## Execute a aplicação
+4. Inicie:
 
 ```bash
 python app.py
 ```
 
-Servidor iniciado em:
+Endereço: `http://localhost:5000`. O Random Forest é treinado na inicialização. O servidor atual usa o modo de desenvolvimento do Flask.
 
-```txt
-http://localhost:5000
-```
+Sem chave do Gemini, o histórico tabular funciona e a recomendação consolidada pode usar texto de fallback. As rotas que analisam fotos dependem da chave, acesso à internet e disponibilidade do provedor. Health check online não comprova que o Gemini está disponível.
 
----
+## Endpoints da versão 2
 
-# Documentação dos Endpoints
+| Método | Rota | Entrada |
+|---|---|---|
+| GET | /api/v2/health | Sem corpo |
+| POST | /api/v2/score/historico | JSON com os cinco indicadores |
+| POST | /api/v2/score/visual | multipart/form-data, campo imagem |
+| POST | /api/v2/pets/analyze-registration-photo | multipart/form-data, campo imagem |
+| POST | /api/v2/score/consolidado | JSON com pet, historico e analise_visual opcional |
 
-# Predição Tabular (Histórico + IoT)
-
-## Endpoint
-
-```http
-POST /api/score/historico
-```
-
-## Content-Type
-
-```txt
-application/json
-```
-
-## Payload
+### Histórico
 
 ```json
 {
@@ -162,115 +106,90 @@ application/json
 }
 ```
 
----
+Use idade e dias não negativos, predisposição 0 ou 1 e variação de peso -1 (redução), 0 (estável) ou 1 (aumento). A resposta contém `score_base`, `nivel_risco_predito`, `classificacao_modelo`, `probabilidades` e `fatores_risco`.
 
-## Resposta Esperada (200 OK)
+### Foto no Postman
 
-```json
-{
-  "pet_risco_id": 2,
-  "score_saude": 30,
-  "status_saude": "Critico",
-  "cor_indicador": "Vermelho",
-  "disparar_whatsapp": true
-}
-```
+Use POST na rota desejada, Body → form-data, chave `imagem`, tipo File. Selecione uma foto JPEG ou PNG de até **5 MB**, limite da API Python. Deixe o Postman definir o Content-Type com o boundary. A API Python não implementa autenticação; o Bearer Token é usado quando a chamada passa pelo backend Java.
 
----
+A rota de cadastro retorna `origem`, `requer_confirmacao`, `analise_cadastro` e `aviso`. A análise inclui espécie, raça estimada, cor, porte, faixa de peso, condição corporal, características e confiança. Os valores podem variar entre chamadas.
 
-# Predição Visual (IA Generativa)
-
-## Endpoint
-
-```http
-POST /api/score/visual
-```
-
-## Content-Type
-
-```txt
-multipart/form-data
-```
-
----
-
-## Payload
-
-| Campo | Tipo | Descrição |
-|---|---|---|
-| imagem | File | Arquivo de imagem do pet (.jpg, .jpeg, .png) |
-
-### Limite máximo
-
-```txt
-5MB
-```
-
----
-
-## Resposta Esperada (200 OK)
+### Score consolidado
 
 ```json
 {
-  "especie": "Cao",
-  "raca_estimada": "Pug",
-  "condicao_corporal": "Sobrepeso",
-  "alerta_whatsapp": "Ola! Notamos pelo nosso sistema visual que o pet encontra-se com sobrepeso. Recomendamos agendar uma avaliacao nutricional.",
-  "pontos_de_risco": 10
+  "pet": {"id": 1, "nome": "Mel"},
+  "historico": {
+    "idade_anos": 12,
+    "raca_predisposicao": 1,
+    "dias_ultima_vacina": 400,
+    "dias_ultimo_vermifugo": 120,
+    "variacao_peso_iot": -1
+  },
+  "analise_visual": {
+    "condicao_corporal": "Sobrepeso",
+    "pontos_risco_visual": 8
+  }
 }
 ```
 
----
+O objeto `analise_visual` acima é um exemplo simulado. Em um fluxo real, utilize o resultado da rota de análise visual. A resposta consolidada inclui score, status, prioridade, fatores, recomendação, alerta, data de processamento e identificação do modelo como protótipo acadêmico.
 
-# Evidência Gerada
+## Como o score é calculado
 
-Após o processamento bem-sucedido da rota visual, o sistema cria automaticamente o arquivo:
+O Random Forest usa 150 árvores, profundidade máxima 8 e semente 42. É treinado na inicialização com 3.000 registros sintéticos rotulados por regras de idade, vacinação, vermifugação, predisposição e variação de peso.
 
-```txt
-output_analise_ia.jpg
-```
+- Score base: `round(100 - 35 × (P(atenção) + 2 × P(crítico)))`.
+- Score final: score base menos penalidade visual, limitado entre 0 e 100.
+- Penalidades visuais atuais: ideal 0; sobrepeso 8; obeso 15; abaixo do peso 12; indeterminado 0.
+- A consolidação limita a penalidade recebida ao intervalo 0–20.
+- Status final: SAUDAVEL a partir de 80; ATENCAO de 60 a 79; CRITICO abaixo de 60.
 
-O arquivo contém:
+Esses parâmetros descrevem a implementação acadêmica; não são limiares clínicos validados.
 
-- Diagnóstico visual
-- Informações clínicas
-- Evidência anotada pela IA
+## Demonstração e resultados parciais
 
----
+Na sessão de integração de **07/09/2026**, a rota de cadastro por foto respondeu HTTP 200 com a foto de exemplo em cerca de 7 segundos. O mesmo envio pelo cliente Java retornou com sucesso em aproximadamente 6,6 segundos. São medições pontuais, não um benchmark.
 
-#  Estrutura Esperada do Projeto
+Também houve uma tentativa pelo Postman que excedeu o tempo de espera do backend Java e retornou 504. Portanto, a disponibilidade e a latência da análise externa ainda precisam ser acompanhadas.
 
+Não foram calculadas métricas de acurácia, precisão ou recall em uma base real ou conjunto independente de validação. O treinamento com dados sintéticos demonstra o fluxo técnico, não eficácia clínica.
+
+### Reproduzir a demonstração
+
+Com a API iniciada:
 ```bash
-clyvo-predict-api/
-│
-├── app.py
-├── .env
-├── requirements.txt
-├── output_analise_ia.jpg
-│
-├── models/
-├── routes/
-├── services/
-├── utils/
-│
-└── README.md
+python teste.py
+python teste.py --imagem foto_pet.jpg
 ```
 
----
+O primeiro comando verifica health check, histórico e score consolidado com um cenário estável. O segundo adiciona a análise de cadastro da foto e depende do Gemini. O script usa apenas a biblioteca padrão do Python, limita o tempo de espera e termina com erro se uma requisição falhar.
 
-#  Objetivo do Projeto
+Para Postman, importe `docs/Clyvo-AI.postman_collection.json`; ajuste a variável `base_url` e selecione o arquivo local nas duas requisições de foto.
 
-O objetivo do CLYVO Predict é transformar a medicina veterinária reativa em um modelo preventivo, utilizando:
+## Estrutura
 
-- Inteligência Artificial
-- IoT
-- Visão Computacional
-- Automação de alertas clínicos
+```text
+predict-clyvo-ia/
+├── app.py
+├── config.py
+├── requirements.txt
+├── .env.example
+├── .gitignore
+├── README.md
+├── teste.py
+├── foto_pet.jpg
+├── cachorro_pet.jpeg
+├── docs/
+│   └── Clyvo-AI.postman_collection.json
+└── services/
+    ├── gemini_service.py
+    ├── health_score_service.py
+    └── risk_model_service.py
+```
 
-para aumentar a qualidade de vida dos pets e reduzir riscos clínicos antecipadamente.
+As fotos existentes foram preservadas como entradas de demonstração. Arquivos locais de saída, caches e credenciais não fazem parte dos entregáveis.
 
----
+## Próximos passos
 
-# Desenvolvido para
-
-**FIAP Challenge 2026** 
+Validar com dados adequados e revisão veterinária, medir desempenho em conjunto separado, melhorar tratamento de falhas do provedor de IA e evoluir autenticação e integração com os demais componentes.
